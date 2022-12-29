@@ -9,5 +9,9 @@
   "author": {
     "name": "EnakNalla",
     "email": "121622489+EnakNalla@users.noreply.github.com"
+  },
+  "info": {
+    "comments": "Live view logs",
+    "productVersion": "0.0.0"
   }
 }
