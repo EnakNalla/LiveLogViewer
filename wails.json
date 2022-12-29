@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "LiveLogViewer",
+  "outputfilename": "LiveLogViewer",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "EnakNalla",
+    "email": "121622489+EnakNalla@users.noreply.github.com"
+  }
+}
