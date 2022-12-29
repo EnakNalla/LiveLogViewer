@@ -64,7 +64,7 @@
   };
 
   const getTabClass = (tab: string) =>
-    tab === activeLog ? "tab tab-lifted tab-active" : "tab tab-lifted";
+    tab === activeLog ? "tab tab-bordered tab-lifted tab-active" : "tab tab-lifted";
 
   const handleSearch = () => {
     // TODO handle clear
@@ -81,7 +81,11 @@
       if (lines[i].innerText.includes(searchTerm)) {
         lines[i].innerHTML = lines[i].innerText.replace(
           searchTerm,
-          '<span class="text-yellow-500" data-index=' + results + ">" + searchTerm + "</span>"
+          '<span class="text-black bg-yellow-400" data-index=' +
+            results +
+            ">" +
+            searchTerm +
+            "</span>"
         );
         results++;
       }
@@ -106,8 +110,8 @@
   };
 
   const clearSearch = () => {
-    const highlights = document.querySelectorAll(".highlight");
-    highlights.forEach(element => element.classList.remove("highlight"));
+    const highlights = document.querySelectorAll(".bg-yellow-400");
+    highlights.forEach(element => element.classList.remove("bg-yellow-400", "text-black"));
     const prevResult = document.getElementsByClassName("current")[0];
     prevResult?.classList.remove("current", "bg-primary", "text-white");
 
@@ -140,9 +144,9 @@
 </script>
 
 <main class="mx-4 h-full">
-  <div class="mt-2 flex justify-between">
+  <div class="flex justify-between pt-2">
     <div>
-      <button type="button" class="btn-ghost btn" aria-label="Open log" on:click={handleLoadLog}>
+      <button type="button" class="btn-primary btn" aria-label="Open log" on:click={handleLoadLog}>
         <svg
           aria-hidden="true"
           class="h-6 w-6"
@@ -162,7 +166,7 @@
 
       <button
         type="button"
-        class="btn-ghost btn ml-4"
+        class="btn-primary btn ml-8"
         aria-label={paused ? "Play" : "Pause"}
         on:click={togglePaused}
       >
@@ -347,7 +351,7 @@
     {/each}
   </div>
 
-  <div class="h-5/6 overflow-auto border-b" id="lines">
+  <div class="h-5/6 overflow-auto border-b border-base-300" id="lines">
     {#if activeLog}
       {#each logs[activeLog] as line}
         <p class="whitespace-nowrap font-mono">{line}</p>
