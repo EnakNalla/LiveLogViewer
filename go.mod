@@ -2,11 +2,13 @@ module github.com/EnakNalla/LiveLogViewer
 
 go 1.18
 
-require github.com/wailsapp/wails/v2 v2.2.0
+require (
+	github.com/fsnotify/fsnotify v1.6.0
+	github.com/wailsapp/wails/v2 v2.2.0
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
