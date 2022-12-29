@@ -12,6 +12,10 @@
   let paused = false;
   const togglePaused = () => (paused = !paused);
 
+  let searchTerm = "";
+  let searchResults = 0;
+  let searchIndex = 0;
+
   const handleLoadLog = async () => {
     const result = await SelectFile();
     if (result.success) {
@@ -61,6 +65,78 @@
 
   const getTabClass = (tab: string) =>
     tab === activeLog ? "tab tab-lifted tab-active" : "tab tab-lifted";
+
+  const handleSearch = () => {
+    // TODO handle clear
+    if (!searchTerm) {
+      clearSearch();
+      return;
+    }
+
+    paused = true;
+    let results = 0;
+    const lines = document.querySelectorAll("p");
+
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].innerText.includes(searchTerm)) {
+        lines[i].innerHTML = lines[i].innerText.replace(
+          searchTerm,
+          '<span class="text-yellow-500" data-index=' + results + ">" + searchTerm + "</span>"
+        );
+        results++;
+      }
+    }
+
+    searchResults = results - 1;
+
+    if (searchResults <= 0) {
+      // TODO toast
+      clearSearch();
+    }
+  };
+
+  const handleSearchInput = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+
+    searchTerm = target.value;
+
+    if (!searchTerm) {
+      clearSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    const highlights = document.querySelectorAll(".highlight");
+    highlights.forEach(element => element.classList.remove("highlight"));
+    const prevResult = document.getElementsByClassName("current")[0];
+    prevResult?.classList.remove("current", "bg-primary", "text-white");
+
+    searchTerm = "";
+    searchResults = 0;
+    searchIndex = 0;
+    paused = false;
+  };
+
+  const handleChevronClick = (next: boolean) => {
+    searchIndex = next ? searchIndex + 1 : searchIndex - 1;
+
+    if (searchIndex < 0) {
+      searchIndex = searchResults;
+    } else if (searchIndex >= searchResults) {
+      searchIndex = 0;
+    }
+
+    focusResult(searchIndex);
+  };
+
+  const focusResult = (index: number) => {
+    const prevResult = document.getElementsByClassName("current")[0];
+    prevResult?.classList.remove("current", "bg-primary", "text-white");
+
+    const result = document.querySelector('[data-index="' + index + '"]');
+    result?.parentElement?.classList.add("bg-primary", "text-white", "current");
+    result?.scrollIntoView();
+  };
 </script>
 
 <main class="mx-4 h-full">
@@ -124,6 +200,124 @@
         {/if}
       </button>
     </div>
+
+    <div class="flex">
+      <label class="sr-only" for="search-input">Search</label>
+      <form class="input-group" on:submit|preventDefault={handleSearch}>
+        <div class="relative">
+          <input
+            value={searchTerm}
+            on:change={handleSearchInput}
+            type="text"
+            class="input-bordered input rounded-r-none pr-8"
+            placeholder="Enter search term"
+            id="search-input"
+          />
+          <button
+            class="btn-ghost btn-sm btn absolute bottom-2 right-2 p-0"
+            type="button"
+            on:click={() => clearSearch()}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-6 w-6"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <button type="submit" class="btn-primary btn">
+          <svg
+            aria-hidden="true"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </form>
+      {#if searchResults}
+        <p>{searchIndex} / {searchResults}</p>
+        <div class="btn-group">
+          <button
+            type="button"
+            class="btn btn-primary"
+            aria-label="Next result"
+            on:click={() => handleChevronClick(true)}
+          >
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-6 w-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 5.25l-7.5 7.5-7.5-7.5m15 6l-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            aria-label="Previous result"
+            on:click={() => handleChevronClick(false)}
+          >
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-6 w-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5"
+              />
+            </svg>
+          </button>
+        </div>
+      {/if}
+    </div>
+
+    <div>
+      <button type="button" class="btn btn-primary invisible" aria-label="Settings">
+        <svg
+          aria-hidden="true"
+          class="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div class="mt-2">
@@ -131,13 +325,13 @@
       <div class={getTabClass(key)}>
         <button
           type="button"
-          class="btn-ghost btn-xs btn normal-case"
+          class="btn btn-ghost btn-xs normal-case"
           on:click={() => setActiveLog(key)}
         >
           {key.split(/[\\/]/).pop()}
         </button>
 
-        <button class="btn-ghost btn-xs btn" on:click={() => removeLog(key)}>
+        <button class="btn btn-ghost btn-xs" on:click={() => removeLog(key)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
