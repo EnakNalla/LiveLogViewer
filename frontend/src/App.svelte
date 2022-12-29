@@ -1,6 +1,8 @@
 <script lang="ts">
   import { SelectFile, RemoveWatcher } from "../wailsjs/go/main/App";
   import { EventsOn } from "../wailsjs/runtime";
+  import ToastContainer from "./components/Toast/ToastContainer.svelte";
+  import { addToast } from "./stores/toastStore";
 
   interface Logs {
     [key: string]: string[];
@@ -35,7 +37,7 @@
         }
       });
     } else {
-      // TODO toast
+      addToast("Failed to add Log!", "alert-error");
     }
   };
 
@@ -94,7 +96,7 @@
     searchResults = results - 1;
 
     if (searchResults <= 0) {
-      // TODO toast
+      addToast("No results!", "alert-warning");
       clearSearch();
     }
   };
@@ -358,4 +360,6 @@
       {/each}
     {/if}
   </div>
+
+  <ToastContainer />
 </main>
