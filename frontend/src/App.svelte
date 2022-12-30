@@ -3,6 +3,7 @@
   import { EventsOn } from "../wailsjs/runtime";
   import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { addToast } from "./stores/toastStore";
+  import Settings from "./components/Settings.svelte";
 
   interface Logs {
     [key: string]: string[];
@@ -24,9 +25,8 @@
       const path = result.data.path;
       logs[path] = result.data.lines;
 
-      activeLog = path;
-
       setTimeout(scrollToBottom, 500);
+      setTimeout(() => setActiveLog(path), 200);
 
       EventsOn(path, line => {
         const log = logs[path];
@@ -42,12 +42,16 @@
   };
 
   const scrollToBottom = () => {
-    const linesContainer = document.getElementById("lines");
+    const linesContainer = document.getElementById(activeLog);
     linesContainer.scrollTo(0, linesContainer.scrollHeight);
   };
 
   const setActiveLog = (key: string) => {
+    clearSearch();
     activeLog = key;
+
+    document.querySelector(".visible")?.classList.replace("visible", "hidden");
+    document.getElementById(key).classList.replace("hidden", "visible");
 
     logs = { ...logs };
   };
@@ -77,7 +81,8 @@
 
     paused = true;
     let results = 0;
-    const lines = document.querySelectorAll("p");
+    const container = document.getElementById(activeLog);
+    const lines = container.querySelectorAll("p");
 
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].innerText.includes(searchTerm)) {
@@ -306,23 +311,7 @@
     </div>
 
     <div>
-      <button type="button" class="btn btn-primary invisible" aria-label="Settings">
-        <svg
-          aria-hidden="true"
-          class="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
+      <Settings />
     </div>
   </div>
 
@@ -353,13 +342,22 @@
     {/each}
   </div>
 
-  <div class="h-5/6 overflow-auto border-b border-base-300" id="lines">
-    {#if activeLog}
-      {#each logs[activeLog] as line}
+  {#each Object.entries(logs) as [key, lines] (key)}
+    <div class="hidden h-5/6 overflow-auto" id={key}>
+      {#each lines as line}
         <p class="whitespace-nowrap font-mono">{line}</p>
       {/each}
-    {/if}
-  </div>
+    </div>
+  {/each}
+
+  <!-- TODO save place in tab  -->
+  <!-- <div class="alert block h-5/6 overflow-auto" id="lines"> -->
+  <!--   {#if activeLog} -->
+  <!--     {#each logs[activeLog] as line} -->
+  <!--       <p class="whitespace-nowrap font-mono">{line}</p> -->
+  <!--     {/each} -->
+  <!--   {/if} -->
+  <!-- </div> -->
 
   <ToastContainer />
 </main>
