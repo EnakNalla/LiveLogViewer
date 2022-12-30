@@ -70,7 +70,9 @@
   };
 
   const getTabClass = (tab: string) =>
-    tab === activeLog ? "tab tab-bordered tab-lifted tab-active" : "tab tab-lifted";
+    tab === activeLog
+      ? "tab tab-bordered tab-lifted tab-active !bg-base-300"
+      : "tab tab-bordered tab-lifted";
 
   const handleSearch = () => {
     // TODO handle clear
@@ -343,21 +345,12 @@
   </div>
 
   {#each Object.entries(logs) as [key, lines] (key)}
-    <div class="hidden h-5/6 overflow-auto" id={key}>
+    <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
       {#each lines as line}
         <p class="whitespace-nowrap font-mono">{line}</p>
       {/each}
     </div>
   {/each}
-
-  <!-- TODO save place in tab  -->
-  <!-- <div class="alert block h-5/6 overflow-auto" id="lines"> -->
-  <!--   {#if activeLog} -->
-  <!--     {#each logs[activeLog] as line} -->
-  <!--       <p class="whitespace-nowrap font-mono">{line}</p> -->
-  <!--     {/each} -->
-  <!--   {/if} -->
-  <!-- </div> -->
 
   <ToastContainer />
 </main>
