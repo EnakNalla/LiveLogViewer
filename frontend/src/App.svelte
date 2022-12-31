@@ -1,15 +1,11 @@
 <script lang="ts">
-  import { SelectFile, RemoveWatcher, GetSettings } from "../wailsjs/go/main/App";
+  import { SelectFile, RemoveWatcher } from "../wailsjs/go/main/App";
   import { EventsOn } from "../wailsjs/runtime";
   import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { addToast } from "./stores/toastStore";
   import Settings from "./components/Settings.svelte";
 
-  interface Logs {
-    [key: string]: string[];
-  }
-
-  let logs: Logs = {};
+  let logs: { [key: string]: string[] } = {};
   let activeLog = "";
 
   let paused = false;
@@ -21,24 +17,25 @@
 
   const handleLoadLog = async () => {
     const result = await SelectFile();
-    if (result.success) {
-      const path = result.data.path;
-      logs[path] = result.data.lines;
-
-      setTimeout(scrollToBottom, 500);
-      setTimeout(() => setActiveLog(path), 200);
-
-      EventsOn(path, line => {
-        const log = logs[path];
-        logs[path] = [...log, line];
-
-        if (!paused && path === activeLog) {
-          scrollToBottom();
-        }
-      });
-    } else {
+    if (!result.success) {
       addToast("Failed to add Log!", "alert-error");
+      return;
     }
+
+    const path = result.data.path;
+    logs[path] = result.data.lines;
+
+    setTimeout(scrollToBottom, 500);
+    setTimeout(() => setActiveLog(path), 200);
+
+    EventsOn(path, line => {
+      const log = logs[path];
+      logs[path] = [...log, line];
+
+      if (!paused && path === activeLog) {
+        scrollToBottom();
+      }
+    });
   };
 
   const scrollToBottom = () => {
@@ -78,7 +75,6 @@
       : "tab tab-bordered tab-lifted";
 
   const handleSearch = () => {
-    // TODO handle clear
     if (!searchTerm) {
       clearSearch();
       return;
@@ -348,7 +344,7 @@
   </div>
 
   {#each Object.entries(logs) as [key, lines] (key)}
-    <div class="rounded-b-box rounded-tr-box bg-base-300 hidden h-5/6 overflow-auto p-2" id={key}>
+    <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
       {#each lines as line}
         <p class="whitespace-nowrap font-mono">{line}</p>
       {/each}
