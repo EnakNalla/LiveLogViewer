@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { SelectFile, RemoveWatcher } from "../wailsjs/go/main/App";
+  import { SelectFile, RemoveWatcher, GetSettings } from "../wailsjs/go/main/App";
   import { EventsOn } from "../wailsjs/runtime";
   import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { addToast } from "./stores/toastStore";
@@ -56,8 +56,11 @@
     logs = { ...logs };
   };
 
-  const removeLog = (path: string) => {
-    RemoveWatcher(path);
+  const removeLog = async (path: string) => {
+    const result = await RemoveWatcher(path);
+    if (!result.success) {
+      addToast(result.error, "alert-error");
+    }
 
     delete logs[path];
 
@@ -345,7 +348,7 @@
   </div>
 
   {#each Object.entries(logs) as [key, lines] (key)}
-    <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
+    <div class="rounded-b-box rounded-tr-box bg-base-300 hidden h-5/6 overflow-auto p-2" id={key}>
       {#each lines as line}
         <p class="whitespace-nowrap font-mono">{line}</p>
       {/each}

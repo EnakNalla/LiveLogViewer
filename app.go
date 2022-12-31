@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -22,12 +24,27 @@ type Result struct {
 	Error   string  `json:"error"`
 }
 
+// Looks like generics is not supported by wails
+type SettingsResult struct {
+	Success bool     `json:"success"`
+	Data    Settings `json:"data"`
+	Error   string   `json:"error"`
+}
+
+type Settings struct {
+	Theme string `json:"theme"`
+}
+
 type App struct {
 	ctx context.Context
 }
 
 var watcher, err = fsnotify.NewWatcher()
 var logs = map[string]LogFile{}
+
+var settings Settings
+var settingsPath string
+var settingsError error = nil
 
 func NewApp() *App {
 	return &App{}
@@ -40,6 +57,10 @@ func (a *App) startup(ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
+
+	settingsPath = a.getSettingsDir()
+	a.readSettings()
+
 	defer watcher.Close()
 
 	go func() {
@@ -176,4 +197,64 @@ func (a *App) RemoveWatcher(path string) Result {
 	}
 
 	return Result{Data: LogFile{}, Success: true, Error: ""}
+}
+
+func (a *App) getSettingsDir() string {
+	path := ""
+
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		path = os.Getenv("APPDATA") + "\\LiveLogViewer"
+	case "darwin":
+		path = os.Getenv("HOME") + "/Library/Application Support/LiveLogViewer/"
+	case "linux":
+		path = os.Getenv("HOME") + "/.config/LiveLogViewer"
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.Mkdir(path, os.FileMode(0755)); err != nil {
+			runtime.LogErrorf(a.ctx, err.Error())
+			settingsError = err
+		}
+	}
+
+	return path
+}
+
+func (a *App) readSettings() {
+	settingsPath += "config.json"
+	if _, err := os.Stat(settingsPath); os.IsNotExist(err) {
+		settings = Settings{"none"}
+		a.WriteSettings(settings)
+	} else {
+		file, err := os.Open(settingsPath)
+		if err != nil {
+			runtime.LogErrorf(a.ctx, err.Error())
+			settingsError = err
+			return
+		}
+		defer file.Close()
+
+		decoder := json.NewDecoder(file)
+		decoder.Decode(&settings)
+	}
+}
+
+func (a *App) WriteSettings(s Settings) SettingsResult {
+	data, err := json.Marshal(&s)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, err.Error())
+		return SettingsResult{Data: s, Success: false, Error: "Failed to save settings!"}
+	}
+	ioutil.WriteFile(settingsPath, data, os.ModePerm)
+
+	return SettingsResult{Data: s, Success: true, Error: ""}
+}
+
+func (a *App) GetSettings() SettingsResult {
+	if settingsError != nil {
+		return SettingsResult{Data: settings, Success: false, Error: settingsError.Error()}
+	}
+
+	return SettingsResult{Data: settings, Success: true, Error: ""}
 }
