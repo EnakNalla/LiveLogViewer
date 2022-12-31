@@ -66,6 +66,7 @@
     if (path === activeLog) {
       const entries = Object.entries(logs);
       activeLog = entries.length >= 1 ? entries[0][0] : "";
+      if (activeLog) setActiveLog(activeLog);
     }
   };
 
