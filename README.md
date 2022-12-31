@@ -10,4 +10,6 @@
 
 View log files in realtime.
 
+![Demo](/LiveLogViewer-demo.gif)
+
 Built with [Wails](https://wails.io/)
