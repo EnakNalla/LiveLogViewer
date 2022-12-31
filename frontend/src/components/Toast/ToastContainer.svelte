@@ -4,7 +4,7 @@
 </script>
 
 {#if toasts}
-  <section class="fixed right-4 bottom-0 w-1/4">
+  <section class="fixed right-4 bottom-0" style="min-width: 25%">
     {#each $toasts as toast (toast.id)}
       <Toast {toast} />
     {/each}
