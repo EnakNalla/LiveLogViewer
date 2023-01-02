@@ -3,6 +3,8 @@
   import { EventsOn } from "../wailsjs/runtime";
   import { addToast } from "./stores/toastStore";
   import Settings from "./components/Settings.svelte";
+  import ToastContainer from "./components/Toast/ToastContainer.svelte";
+  import { settings } from "./stores/settingsStore";
 
   let logs: { [key: string]: string[] } = {};
   let activeLog = "";
@@ -342,8 +344,16 @@
   {#each Object.entries(logs) as [key, lines] (key)}
     <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
       {#each lines as line}
-        <p class="whitespace-nowrap font-mono">{line}</p>
+        {#if $settings.highlightErrors && line.toLowerCase().includes("error")}
+          <p class="w-min whitespace-nowrap bg-error font-mono text-black">{line}</p>
+        {:else if $settings.highlightWarnings && line.toLowerCase().includes("warning")}
+          <p class="w-min whitespace-nowrap bg-warning font-mono text-black">{line}</p>
+        {:else}
+          <p class="w-min whitespace-nowrap font-mono">{line}</p>
+        {/if}
       {/each}
     </div>
   {/each}
+
+  <ToastContainer />
 </main>

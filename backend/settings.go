@@ -9,9 +9,11 @@ import (
 )
 
 type Settings struct {
-	Theme         string `json:"theme"`
-	TailThreshold int64  `json:"tailThreshold"` // in mb
-	TailLines     int    `json:"tailLines"`
+	Theme             string `json:"theme"`
+	TailThreshold     int64  `json:"tailThreshold"` // in mb
+	TailLines         int    `json:"tailLines"`
+	HighlightErrors   bool   `json:"highlightErrors"`
+	HighlightWarnings bool   `json:"highlightWarnings"`
 }
 
 func (a *App) GetSettings() Response {
@@ -45,7 +47,7 @@ func (a *App) readSettings() {
 
 	a.settingsPath += "config.json"
 	if _, err := os.Stat(a.settingsPath); os.IsNotExist(err) {
-		a.settings = Settings{TailLines: 100, TailThreshold: 20}
+		a.settings = Settings{TailLines: 100, TailThreshold: 20, HighlightErrors: true, HighlightWarnings: false, Theme: "none"}
 		a.WriteSettings(a.settings)
 	} else {
 		file, err := os.Open(a.settingsPath)
