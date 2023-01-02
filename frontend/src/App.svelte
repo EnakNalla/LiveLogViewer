@@ -1,63 +1,58 @@
 <script lang="ts">
-  import { SelectFile, RemoveWatcher } from "../wailsjs/go/main/App";
+  import { SelectLog, RemoveLog } from "../wailsjs/go/backend/App";
   import { EventsOn } from "../wailsjs/runtime";
-  import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { addToast } from "./stores/toastStore";
   import Settings from "./components/Settings.svelte";
 
   let logs: { [key: string]: string[] } = {};
   let activeLog = "";
-
   let paused = false;
-  const togglePaused = () => (paused = !paused);
 
   let searchTerm = "";
   let searchResults = 0;
   let searchIndex = 0;
 
-  const handleLoadLog = async () => {
-    const result = await SelectFile();
-    if (!result.success) {
-      addToast("Failed to add Log!", "alert-error");
+  const togglePaused = () => (paused = !paused);
+
+  EventsOn("error", err => addToast(err, "alert-error"));
+
+  const openLog = async () => {
+    const response = await SelectLog();
+    if (!response.success) {
+      addToast(response.error, "alert-error");
       return;
     }
 
-    const path = result.data.path;
-    logs[path] = result.data.lines;
+    const path = response.data.path;
+    logs[path] = response.data.lines;
 
-    setTimeout(scrollToBottom, 500);
-    setTimeout(() => setActiveLog(path), 200);
+    setTimeout(() => setActiveLog(path), 50);
+    setTimeout(() => scrollToBottom(path), 200);
 
     EventsOn(path, line => {
       const log = logs[path];
       logs[path] = [...log, line];
 
-      if (!paused && path === activeLog) {
-        scrollToBottom();
-      }
+      if (!paused && activeLog === path) scrollToBottom(path);
     });
   };
 
-  const scrollToBottom = () => {
-    const linesContainer = document.getElementById(activeLog);
-    linesContainer.scrollTo(0, linesContainer.scrollHeight);
+  const scrollToBottom = (id: string) => {
+    const el = document.getElementById(id);
+    el.scrollTo(0, el.scrollHeight);
   };
 
   const setActiveLog = (key: string) => {
     clearSearch();
     activeLog = key;
+    logs = { ...logs };
 
     document.querySelector(".visible")?.classList.replace("visible", "hidden");
     document.getElementById(key).classList.replace("hidden", "visible");
-
-    logs = { ...logs };
   };
 
-  const removeLog = async (path: string) => {
-    const result = await RemoveWatcher(path);
-    if (!result.success) {
-      addToast(result.error, "alert-error");
-    }
+  const removeLog = (path: string) => {
+    RemoveLog(path);
 
     delete logs[path];
 
@@ -83,8 +78,7 @@
 
     paused = true;
     let results = 0;
-    const container = document.getElementById(activeLog);
-    const lines = container.querySelectorAll("p");
+    const lines = document.querySelectorAll("p");
 
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].innerText.includes(searchTerm)) {
@@ -155,7 +149,7 @@
 <main class="mx-4 h-full">
   <div class="flex justify-between pt-2">
     <div>
-      <button type="button" class="btn-primary btn" aria-label="Open log" on:click={handleLoadLog}>
+      <button type="button" class="btn-primary btn" aria-label="Open log" on:click={openLog}>
         <svg
           aria-hidden="true"
           class="h-6 w-6"
@@ -318,7 +312,8 @@
   </div>
 
   <div class="mt-2">
-    {#each Object.entries(logs) as [key] (key)}
+    <div class="mt-2" />
+    {#each Object.entries(logs) as [key]}
       <div class={getTabClass(key)}>
         <button
           type="button"
@@ -351,6 +346,4 @@
       {/each}
     </div>
   {/each}
-
-  <ToastContainer />
 </main>

@@ -1,55 +1,25 @@
-export namespace main {
+export namespace backend {
 	
-	export class LogFile {
-	    path: string;
-	    lines: string[];
-	
-	    static createFrom(source: any = {}) {
-	        return new LogFile(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.path = source["path"];
-	        this.lines = source["lines"];
-	    }
-	}
-	export class Result {
+	export class Response {
 	    success: boolean;
-	    data: LogFile;
+	    data: any;
 	    error: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new Result(source);
+	        return new Response(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.success = source["success"];
-	        this.data = this.convertValues(source["data"], LogFile);
+	        this.data = source["data"];
 	        this.error = source["error"];
 	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
 	}
 	export class Settings {
 	    theme: string;
+	    tailThreshold: number;
+	    tailLines: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -58,41 +28,9 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.theme = source["theme"];
+	        this.tailThreshold = source["tailThreshold"];
+	        this.tailLines = source["tailLines"];
 	    }
-	}
-	export class SettingsResult {
-	    success: boolean;
-	    data: Settings;
-	    error: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new SettingsResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.success = source["success"];
-	        this.data = this.convertValues(source["data"], Settings);
-	        this.error = source["error"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
 	}
 
 }
