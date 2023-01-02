@@ -27,6 +27,11 @@ func (a *App) SelectLog() Response {
 		return Failure("No selection was made.")
 	}
 
+	_, exists := a.logs[selection]
+	if exists {
+		return Failure("Log already loaded")
+	}
+
 	lines, err := a.readLines(a.settings.TailLines, selection)
 	if err != nil {
 		runtime.LogErrorf(a.ctx, err.Error())
