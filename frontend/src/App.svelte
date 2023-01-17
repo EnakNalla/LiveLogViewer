@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { SelectLog, RemoveLog } from "../wailsjs/go/backend/App";
+  import { RemoveLog, SelectLog } from "../wailsjs/go/backend/App";
   import { EventsOn } from "../wailsjs/runtime";
-  import { addToast } from "./stores/toastStore";
   import Settings from "./components/Settings.svelte";
   import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { settings } from "./stores/settingsStore";
+  import { addToast } from "./stores/toastStore";
 
   let logs: { [key: string]: string[] } = {};
   let activeLog = "";
@@ -342,12 +342,15 @@
   </div>
 
   {#each Object.entries(logs) as [key, lines] (key)}
-    <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
+    <div
+      class="rounded-b-box rounded-tr-box bg-base-300 hidden h-5/6 overflow-auto p-2 pb-8"
+      id={key}
+    >
       {#each lines as line}
         {#if $settings.highlightErrors && line.toLowerCase().includes("error")}
-          <p class="w-min whitespace-nowrap bg-error font-mono text-black">{line}</p>
+          <p class="bg-error w-min whitespace-nowrap font-mono text-black">{line}</p>
         {:else if $settings.highlightWarnings && line.toLowerCase().includes("warning")}
-          <p class="w-min whitespace-nowrap bg-warning font-mono text-black">{line}</p>
+          <p class="bg-warning w-min whitespace-nowrap font-mono text-black">{line}</p>
         {:else}
           <p class="w-min whitespace-nowrap font-mono">{line}</p>
         {/if}

@@ -4,3 +4,4 @@ build/windows
 node_modules
 frontend/dist
 frontend/wailsjs
+.idea

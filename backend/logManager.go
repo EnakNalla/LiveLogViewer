@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -39,7 +40,11 @@ func (a *App) SelectLog() Response {
 	}
 
 	a.logs[selection] = 1
-	a.watcher.Add(selection)
+	if a.settings.PollingEnabled {
+		a.pollFile(selection)
+	} else {
+		a.watcher.Add(selection)
+	}
 
 	return Success(LogFile{selection, lines})
 }
@@ -47,7 +52,7 @@ func (a *App) SelectLog() Response {
 func (a *App) readLines(nLines int, path string) ([]string, error) {
 	lines := make([]string, nLines)
 
-	fileHandle, err := os.Open(path)
+	fileHandle, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		return lines, err
 	}
@@ -100,7 +105,7 @@ func (a *App) readLines(nLines int, path string) ([]string, error) {
 }
 
 func (a *App) readNextLine(path string) (string, error) {
-	fileHandle, err := os.Open(path)
+	fileHandle, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		return "", err
 	}
@@ -129,6 +134,53 @@ func (a *App) readNextLine(path string) (string, error) {
 	}
 
 	return line, nil
+}
+
+func (a *App) pollFile(path string) {
+	fileHandle, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		runtime.EventsEmit(a.ctx, "error", err.Error())
+	}
+
+	stat, err := fileHandle.Stat()
+	if err != nil {
+		runtime.EventsEmit(a.ctx, "error", err.Error())
+	}
+	lastReadSize := stat.Size()
+
+	fileHandle.Close()
+
+	go func() {
+		for {
+			time.Sleep(time.Duration(a.settings.PollInterval) * time.Microsecond)
+			// TODO: better implement polling exit
+			if _, exists := a.logs[path]; !exists {
+				runtime.EventsEmit(a.ctx, "error", "File not found!")
+				break
+			}
+
+			fileHandle, err := os.OpenFile(path, os.O_RDONLY, 0644)
+			if err != nil {
+				runtime.EventsEmit(a.ctx, "error", err.Error())
+			}
+
+			stat, _ := fileHandle.Stat()
+			filesize := stat.Size()
+
+			if filesize > lastReadSize {
+				fileHandle.Seek(lastReadSize, io.SeekStart)
+				fileScanner := bufio.NewScanner(fileHandle)
+				fileScanner.Split(bufio.ScanLines)
+
+				for fileScanner.Scan() {
+					runtime.EventsEmit(a.ctx, path, fileScanner.Text())
+				}
+
+				lastReadSize = filesize
+				fileHandle.Close()
+			}
+		}
+	}()
 }
 
 func (a *App) RemoveLog(path string) {

@@ -164,6 +164,30 @@
 
         <div class="form-control mt-2">
           <label class="label cursor-pointer">
+            <span class="label-text">Enable polling</span>
+            <input
+              type="checkbox"
+              class="checkbox-primary checkbox"
+              bind:checked={settings.pollingEnabled}
+            />
+          </label>
+        </div>
+
+        <div class="mt-2">
+          <label>
+            <span class="label-text label">Poll interval: </span>
+            <input
+              type="number"
+              min="1"
+              required
+              bind:value={settings.pollInterval}
+              class="input-bordered input-primary input"
+            />
+          </label>
+        </div>
+
+        <div class="form-control mt-2">
+          <label class="label cursor-pointer">
             <span class="label-text">Highlight errors</span>
             <input
               type="checkbox"
