@@ -155,7 +155,7 @@ func (a *App) pollFile(path string) {
 			time.Sleep(time.Duration(a.settings.PollInterval) * time.Microsecond)
 			// TODO: better implement polling exit
 			if _, exists := a.logs[path]; !exists {
-				runtime.EventsEmit(a.ctx, "error", "File not found!")
+				// runtime.EventsEmit(a.ctx, "error", "File not found!")
 				break
 			}
 
