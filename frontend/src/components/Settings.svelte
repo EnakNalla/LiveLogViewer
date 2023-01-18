@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { GetSettings, WriteSettings } from "../../wailsjs/go/backend/App";
   import { onMount } from "svelte";
-  import { addToast } from "../stores/toastStore";
+  import { GetSettings, WriteSettings } from "../../wailsjs/go/backend/App";
   import type { backend } from "../../wailsjs/go/models";
   import { setSettings } from "../stores/settingsStore";
+  import { addToast } from "../stores/toastStore";
 
   let settings: backend.Settings = {
     theme: "none",
     tailThreshold: 20,
     tailLines: 100,
-    highlightErrors: true,
-    highlightWarnings: false
+    highlightLevels: true,
+    pollInterval: 1000,
+    pollingEnabled: false,
+    ignoreCase: true
   };
   const htmlEl = document.querySelector("html");
   let modalToggle: HTMLInputElement;
@@ -143,7 +145,7 @@
               bind:value={settings.tailThreshold}
               class="input-bordered input-primary input"
             />
-            <p class="label-text-alt">
+            <p class="label-text-alt mt-2">
               When a file is bigger than this value only the last x lines will be loaded.
             </p>
           </label>
@@ -164,24 +166,50 @@
 
         <div class="form-control mt-2">
           <label class="label cursor-pointer">
-            <span class="label-text">Highlight errors</span>
+            <span class="label-text">Enable polling</span>
             <input
               type="checkbox"
               class="checkbox-primary checkbox"
-              bind:checked={settings.highlightErrors}
+              bind:checked={settings.pollingEnabled}
+            />
+          </label>
+          <span class="label-text-alt"> Takes effect from the next log opened. </span>
+        </div>
+
+        <div class="mt-2">
+          <label>
+            <span class="label-text label">Poll interval: </span>
+            <input
+              type="number"
+              min="1"
+              required
+              bind:value={settings.pollInterval}
+              class="input-bordered input-primary input"
             />
           </label>
         </div>
 
         <div class="form-control mt-2">
           <label class="label cursor-pointer">
-            <span class="label-text">Highlight warnings</span>
+            <span class="label-text">Highlight log levels</span>
             <input
               type="checkbox"
               class="checkbox-primary checkbox"
-              bind:checked={settings.highlightWarnings}
+              bind:checked={settings.highlightLevels}
             />
           </label>
+        </div>
+
+        <div class="form-control mt-2">
+          <label class="label cursor-pointer">
+            <span class="label-text">Ignore case</span>
+            <input
+              type="checkbox"
+              class="checkbox-primary checkbox"
+              bind:checked={settings.ignoreCase}
+            />
+          </label>
+          <span class="label-text-alt">Ignore case when searching</span>
         </div>
 
         <div class="modal-action">

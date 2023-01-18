@@ -2,18 +2,19 @@ package backend
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type Settings struct {
-	Theme             string `json:"theme"`
-	TailThreshold     int64  `json:"tailThreshold"` // in mb
-	TailLines         int    `json:"tailLines"`
-	HighlightErrors   bool   `json:"highlightErrors"`
-	HighlightWarnings bool   `json:"highlightWarnings"`
+	Theme           string `json:"theme"`
+	TailThreshold   int64  `json:"tailThreshold"` // in mb
+	TailLines       int    `json:"tailLines"`
+	HighlightLevels bool   `json:"highlightLevels"`
+	PollingEnabled  bool   `json:"pollingEnabled"`
+	PollInterval    int    `json:"pollInterval"` // ms
+	IgnoreCase      bool   `json:"ignoreCase"`
 }
 
 func (a *App) GetSettings() Response {
@@ -47,7 +48,7 @@ func (a *App) readSettings() {
 
 	a.settingsPath += "config.json"
 	if _, err := os.Stat(a.settingsPath); os.IsNotExist(err) {
-		a.settings = Settings{TailLines: 100, TailThreshold: 20, HighlightErrors: true, HighlightWarnings: false, Theme: "none"}
+		a.settings = Settings{TailLines: 100, TailThreshold: 20, HighlightLevels: false, Theme: "none", PollingEnabled: false, PollInterval: 1000, IgnoreCase: false}
 		a.WriteSettings(a.settings)
 	} else {
 		file, err := os.Open(a.settingsPath)
@@ -70,7 +71,7 @@ func (a *App) WriteSettings(settings Settings) Settings {
 		runtime.LogErrorf(a.ctx, err.Error())
 	}
 
-	ioutil.WriteFile(a.settingsPath, data, os.ModePerm)
+	os.WriteFile(a.settingsPath, data, os.ModePerm)
 
 	return a.settings
 }

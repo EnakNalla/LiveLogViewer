@@ -1,12 +1,16 @@
 <script lang="ts">
-  import { SelectLog, RemoveLog } from "../wailsjs/go/backend/App";
+  import { RemoveLog, SelectLog } from "../wailsjs/go/backend/App";
   import { EventsOn } from "../wailsjs/runtime";
-  import { addToast } from "./stores/toastStore";
   import Settings from "./components/Settings.svelte";
   import ToastContainer from "./components/Toast/ToastContainer.svelte";
   import { settings } from "./stores/settingsStore";
+  import { addToast } from "./stores/toastStore";
+
+  // TODO: very specific maybe regex?
+  const levels = ["[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[TRACE]", "[FATAL]"];
 
   let logs: { [key: string]: string[] } = {};
+
   let activeLog = "";
   let paused = false;
 
@@ -72,6 +76,11 @@
       ? "tab tab-bordered tab-lifted tab-active !bg-base-300"
       : "tab tab-bordered tab-lifted";
 
+  const replaceInvariant = (str: string, term: string) => {
+    var esc = str.replace(/[-\/\\^$*+?.()|[\]{}]/, "\\$&");
+    var reg = new RegExp(esc, "i");
+  };
+
   const handleSearch = () => {
     if (!searchTerm) {
       clearSearch();
@@ -83,14 +92,17 @@
     const lines = document.querySelectorAll("p");
 
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].innerText.includes(searchTerm)) {
-        lines[i].innerHTML = lines[i].innerText.replace(
-          searchTerm,
-          '<span class="text-black bg-yellow-400" data-index=' +
-            results +
-            ">" +
-            searchTerm +
-            "</span>"
+      let line = lines[i];
+      let condition = $settings.ignoreCase
+        ? line.innerText.toLowerCase().includes(searchTerm.toLowerCase())
+        : line.innerText.includes(searchTerm);
+
+      if (condition) {
+        var esc = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/, "\\$&");
+        var reg = new RegExp(esc, "gi");
+        line.innerHTML = line.innerText.replace(
+          reg,
+          `<span class="text-black bg-yellow-400" data-index="${results}">$&</span>`
         );
         results++;
       }
@@ -131,7 +143,7 @@
 
     if (searchIndex < 0) {
       searchIndex = searchResults;
-    } else if (searchIndex >= searchResults) {
+    } else if (searchIndex > searchResults) {
       searchIndex = 0;
     }
 
@@ -145,6 +157,20 @@
     const result = document.querySelector('[data-index="' + index + '"]');
     result?.parentElement?.classList.add("bg-primary", "text-white", "current");
     result?.scrollIntoView();
+  };
+
+  const parseLine = (line: string) => {
+    const level = levels.find(level => line.includes(level))!;
+    if (!level) return line;
+
+    let colour = "";
+    if (line.includes("ERROR") || line.includes("FATAL")) colour = "text-red-500";
+    if (line.includes("WARN")) colour = "text-yellow-500";
+    if (line.includes("INFO")) colour = "text-blue-500";
+    if (line.includes("DEBUG")) colour = "text-green-500";
+    if (line.includes("TRACE")) colour = "text-purple-500";
+
+    return line.replace(level, `<span class='${colour}'>${level}</span>`);
   };
 </script>
 
@@ -342,14 +368,15 @@
   </div>
 
   {#each Object.entries(logs) as [key, lines] (key)}
-    <div class="rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2" id={key}>
+    <div
+      class="rounded-b-box rounded-tr-box bg-base-300 hidden h-5/6 overflow-auto p-2 pb-8"
+      id={key}
+    >
       {#each lines as line}
-        {#if $settings.highlightErrors && line.toLowerCase().includes("error")}
-          <p class="w-min whitespace-nowrap bg-error font-mono text-black">{line}</p>
-        {:else if $settings.highlightWarnings && line.toLowerCase().includes("warning")}
-          <p class="w-min whitespace-nowrap bg-warning font-mono text-black">{line}</p>
+        {#if $settings.highlightLevels}
+          <p>{@html parseLine(line)}</p>
         {:else}
-          <p class="w-min whitespace-nowrap font-mono">{line}</p>
+          <p>{line}</p>
         {/if}
       {/each}
     </div>
