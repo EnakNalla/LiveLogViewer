@@ -57,10 +57,15 @@ func (a *App) readSettings() {
 			runtime.LogErrorf(a.ctx, err.Error())
 			return
 		}
-		defer file.Close()
+		defer func(file *os.File) {
+			_ = file.Close()
+		}(file)
 
 		decoder := json.NewDecoder(file)
-		decoder.Decode(&a.settings)
+		err = decoder.Decode(&a.settings)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 }
 
@@ -71,7 +76,11 @@ func (a *App) WriteSettings(settings Settings) Settings {
 		runtime.LogErrorf(a.ctx, err.Error())
 	}
 
-	os.WriteFile(a.settingsPath, data, os.ModePerm)
+	err = os.WriteFile(a.settingsPath, data, os.ModePerm)
+	if err != nil {
+		runtime.EventsEmit(a.ctx, "error", err.Error())
+		runtime.LogErrorf(a.ctx, err.Error())
+	}
 
 	return a.settings
 }

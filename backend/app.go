@@ -24,12 +24,21 @@ func (a *App) Startup(ctx context.Context) {
 	a.readSettings()
 	a.logs = make(map[string]uint8)
 
+	if a.settings.PollingEnabled {
+		return
+	}
+
 	var err error = nil
 	a.watcher, err = fsnotify.NewWatcher()
 	if err != nil {
 		panic(err.Error())
 	}
-	defer a.watcher.Close()
+	defer func(watcher *fsnotify.Watcher) {
+		err := watcher.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(a.watcher)
 
 	go func() {
 		for {
