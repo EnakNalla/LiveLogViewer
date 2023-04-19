@@ -1,7 +1,9 @@
 package backend
 
 import (
+	"bufio"
 	"context"
+	"os"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -55,6 +57,7 @@ func (a *App) Startup(ctx context.Context) {
 							runtime.LogErrorf(ctx, err.Error())
 						} else {
 							runtime.EventsEmit(ctx, event.Name, line)
+							println(line)
 						}
 					}
 				}
@@ -63,4 +66,16 @@ func (a *App) Startup(ctx context.Context) {
 	}()
 
 	<-make(chan struct{})
+}
+
+func (a *App) DomReady(ctx context.Context) {
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		println("stdin detected")
+		runtime.EventsEmit(ctx, "stdins", true)
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			runtime.EventsEmit(ctx, "stdin", scanner.Text())
+		}
+	}
 }

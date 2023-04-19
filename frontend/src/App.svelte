@@ -21,6 +21,19 @@
   const togglePaused = () => (paused = !paused);
 
   EventsOn("error", err => addToast(err, "alert-error"));
+  EventsOn("stdins", () => {
+    alert("stdin started");
+    const path = "stdin";
+    logs[path] = [];
+    setTimeout(() => setActiveLog(path), 50);
+
+    EventsOn(path, line => {
+      const log = logs[path];
+      logs[path] = [...log, line];
+
+      if (!paused && activeLog === path) scrollToBottom(path);
+    });
+  });
 
   const openLog = async () => {
     const response = await SelectLog();
@@ -348,6 +361,7 @@
           class="btn btn-ghost btn-xs normal-case"
           on:click={() => setActiveLog(key)}
         >
+          <!-- get the filename -->
           {key.split(/[\\/]/).pop()}
         </button>
 
