@@ -7,3 +7,19 @@ body,
 #app {
   height: 100%;
 }
+
+pre {
+  counter-reset: line;
+}
+
+pre span.line {
+  counter-increment: line;
+}
+
+pre span.line::before {
+  content: counter(line);
+  display: inline-block;
+  margin-right: 1em;
+  border-right: 1px solid #ccc;
+  min-width: 3.5em;
+}

@@ -15,6 +15,8 @@ type Settings struct {
 	PollingEnabled  bool   `json:"pollingEnabled"`
 	PollInterval    int    `json:"pollInterval"` // ms
 	IgnoreCase      bool   `json:"ignoreCase"`
+	TextWrap        bool   `json:"textWrap"`
+	LineNumbers     bool   `json:"lineNumbers"`
 }
 
 func (a *App) GetSettings() Response {
@@ -48,7 +50,7 @@ func (a *App) readSettings() {
 
 	a.settingsPath += "config.json"
 	if _, err := os.Stat(a.settingsPath); os.IsNotExist(err) {
-		a.settings = Settings{TailLines: 100, TailThreshold: 20, HighlightLevels: false, Theme: "none", PollingEnabled: false, PollInterval: 1000, IgnoreCase: false}
+		a.settings = Settings{TailLines: 100, TailThreshold: 5, HighlightLevels: false, Theme: "none", PollingEnabled: false, PollInterval: 1000, IgnoreCase: false, TextWrap: false, LineNumbers: true}
 		a.WriteSettings(a.settings)
 	} else {
 		file, err := os.Open(a.settingsPath)

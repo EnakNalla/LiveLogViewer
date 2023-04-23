@@ -2,18 +2,10 @@
   import { onMount } from "svelte";
   import { GetSettings, WriteSettings } from "../../wailsjs/go/backend/App";
   import type { backend } from "../../wailsjs/go/models";
-  import { setSettings } from "../stores/settingsStore";
+  import { DEFAULT_SETTINGS, setSettings } from "../stores/settingsStore";
   import { addToast } from "../stores/toastStore";
 
-  let settings: backend.Settings = {
-    theme: "none",
-    tailThreshold: 20,
-    tailLines: 100,
-    highlightLevels: true,
-    pollInterval: 1000,
-    pollingEnabled: false,
-    ignoreCase: true
-  };
+  let settings: backend.Settings = DEFAULT_SETTINGS;
   const htmlEl = document.querySelector("html");
   let modalToggle: HTMLInputElement;
 
@@ -26,7 +18,6 @@
 
     settings = result.data;
     setSettings(result.data);
-    console.log(settings);
 
     if (settings.theme === "none") {
       settings.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -210,6 +201,31 @@
             />
           </label>
           <span class="label-text-alt">Ignore case when searching</span>
+        </div>
+
+        <div class="form-control mt-2">
+          <label class="label cursor-pointer">
+            <span class="label-text">Wrap text</span>
+            <input
+              type="checkbox"
+              class="checkbox-primary checkbox"
+              bind:checked={settings.textWrap}
+            />
+          </label>
+        </div>
+
+        <div class="form-control mt-2">
+          <label class="label cursor-pointer">
+            <span class="label-text">Line numbers</span>
+            <input
+              type="checkbox"
+              class="checkbox-primary checkbox"
+              bind:checked={settings.lineNumbers}
+            />
+          </label>
+          <span class="label-text-alt"
+            >Note: line numbers will not be file accurate if the file was tailed.</span
+          >
         </div>
 
         <div class="modal-action">

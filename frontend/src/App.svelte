@@ -6,8 +6,21 @@
   import { settings } from "./stores/settingsStore";
   import { addToast } from "./stores/toastStore";
 
-  // TODO: very specific maybe regex?
-  const levels = ["[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[TRACE]", "[FATAL]"];
+  const levels = {
+    DEBUG: "text-green-500",
+    INFO: "text-blue-500",
+    WARN: "text-yellow-500",
+    ERROR: "text-red-500",
+    TRACE: "text-purple-500",
+    FATAL: "text-red-500",
+    PANIC: "text-red-500",
+    DBG: "text-green-500",
+    INF: "text-blue-500",
+    WRN: "text-yellow-500",
+    ERR: "text-red-500",
+    TRC: "text-purple-500",
+    FTL: "text-red-500"
+  };
 
   let logs: { [key: string]: string[] } = {};
 
@@ -21,8 +34,7 @@
   const togglePaused = () => (paused = !paused);
 
   EventsOn("error", err => addToast(err, "alert-error"));
-  EventsOn("stdins", () => {
-    alert("stdin started");
+  EventsOn("stdin-start", () => {
     const path = "stdin";
     logs[path] = [];
     setTimeout(() => setActiveLog(path), 50);
@@ -42,13 +54,18 @@
       return;
     }
 
+    if (!response.data) return;
+
     const path = response.data.path;
-    logs[path] = response.data.lines;
+    // TODO: for some reason, the first 100 lines are empty strings. This is a hacky fix.
+    logs[path] = response.data.lines.filter(line => line !== "");
 
     setTimeout(() => setActiveLog(path), 50);
     setTimeout(() => scrollToBottom(path), 200);
 
     EventsOn(path, line => {
+      // lets ignore the line if empty.
+      if (line === "") return;
       const log = logs[path];
       logs[path] = [...log, line];
 
@@ -58,7 +75,7 @@
 
   const scrollToBottom = (id: string) => {
     const el = document.getElementById(id);
-    el.scrollTo(0, el.scrollHeight);
+    el.scrollTo(0, el.scrollHeight + 100);
   };
 
   const setActiveLog = (key: string) => {
@@ -88,11 +105,6 @@
     tab === activeLog
       ? "tab tab-bordered tab-lifted tab-active !bg-base-300"
       : "tab tab-bordered tab-lifted";
-
-  const replaceInvariant = (str: string, term: string) => {
-    var esc = str.replace(/[-\/\\^$*+?.()|[\]{}]/, "\\$&");
-    var reg = new RegExp(esc, "i");
-  };
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -173,17 +185,13 @@
   };
 
   const parseLine = (line: string) => {
-    const level = levels.find(level => line.includes(level))!;
-    if (!level) return line;
+    for (const [key, value] of Object.entries(levels)) {
+      if (line.includes(key)) {
+        return line.replace(key, `<span class='${value}'>${key}</span>`);
+      }
+    }
 
-    let colour = "";
-    if (line.includes("ERROR") || line.includes("FATAL")) colour = "text-red-500";
-    if (line.includes("WARN")) colour = "text-yellow-500";
-    if (line.includes("INFO")) colour = "text-blue-500";
-    if (line.includes("DEBUG")) colour = "text-green-500";
-    if (line.includes("TRACE")) colour = "text-purple-500";
-
-    return line.replace(level, `<span class='${colour}'>${level}</span>`);
+    return line;
   };
 </script>
 
@@ -297,7 +305,7 @@
         </button>
       </form>
       {#if searchResults}
-        <p>{searchIndex} / {searchResults}</p>
+        <div class="mx-2 my-auto whitespace-nowrap">{searchIndex} / {searchResults}</div>
         <div class="btn-group">
           <button
             type="button"
@@ -381,18 +389,34 @@
     {/each}
   </div>
 
+  <!-- TODO: would it be better to use array index instead of css for line numbers? -->
   {#each Object.entries(logs) as [key, lines] (key)}
     <div
-      class="rounded-b-box rounded-tr-box bg-base-300 hidden h-5/6 overflow-auto p-2 pb-8"
+      class={"rounded-b-box rounded-tr-box bg-base-300 line-container hidden h-5/6 overflow-auto p-2 pb-8"}
       id={key}
     >
-      {#each lines as line}
+      <pre class={$settings.textWrap ? "whitespace-normal" : "whitespace-nowrap"}>
+        {#if $settings.lineNumbers}
+          {#each lines as line}
+            <span class="flex">
+          <span class="line" />
         {#if $settings.highlightLevels}
-          <p>{@html parseLine(line)}</p>
+                <p>{@html parseLine(line.toUpperCase())}</p>
+              {:else}
+                <p>{line}</p>
+              {/if}
+          </span>
+          {/each}
         {:else}
-          <p>{line}</p>
+          {#each lines as line}
+            {#if $settings.highlightLevels}
+              <p>{@html parseLine(line.toUpperCase())}</p>
+            {:else}
+              <p>{line}</p>
+            {/if}
+          {/each}
         {/if}
-      {/each}
+      </pre>
     </div>
   {/each}
 
