@@ -25,3 +25,12 @@ Run `wails build` you can read about optional build flags [here.](https://wails.
 Build default output is /build/bin/LiveLogViewer
 
 Built with [Wails](https://wails.io/)
+
+## Known bugs
+
+- line highlight doesn't extend past overflow when using nowrap
+
+## Potential features
+
+- more line parsing e.g. dates, numbers
+- Checking for updates
