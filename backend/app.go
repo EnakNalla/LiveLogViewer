@@ -71,8 +71,7 @@ func (a *App) Startup(ctx context.Context) {
 func (a *App) DomReady(ctx context.Context) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
-		println("stdin detected")
-		runtime.EventsEmit(ctx, "stdins", true)
+		runtime.EventsEmit(ctx, "stdin-start", true)
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			runtime.EventsEmit(ctx, "stdin", scanner.Text())

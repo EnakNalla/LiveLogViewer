@@ -25,7 +25,7 @@ func (a *App) SelectLog() Response {
 		return Failure(err.Error())
 	}
 	if selection == "" {
-		return Failure("No selection was made.")
+		return Success(nil)
 	}
 
 	_, exists := a.logs[selection]
