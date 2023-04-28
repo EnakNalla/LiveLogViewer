@@ -69,6 +69,10 @@ func (a *App) Startup(ctx context.Context) {
 }
 
 func (a *App) DomReady(ctx context.Context) {
+	if runtime.Environment(a.ctx).Platform == "windows" {
+		return
+	}
+
 	go func() {
 		stat, _ := os.Stdin.Stat()
 		if (stat.Mode() & os.ModeCharDevice) == 0 {
