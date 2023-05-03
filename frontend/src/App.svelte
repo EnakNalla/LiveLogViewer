@@ -179,14 +179,14 @@
     const prevResult = document.getElementsByClassName("current")[0];
     prevResult?.classList.remove("current", "bg-primary", "text-white");
 
-    const result = document.querySelector('[data-index="' + index + '"]');
+    const result = document.querySelector(`[data-index="${index}"]`);
     result?.parentElement?.classList.add("bg-primary", "text-white", "current");
     result?.scrollIntoView();
   };
 
   const parseLine = (line: string) => {
     for (const [key, value] of Object.entries(levels)) {
-      if (line.includes(key)) {
+      if (line.toUpperCase().includes(key)) {
         return line.replace(key, `<span class='${value}'>${key}</span>`);
       }
     }
@@ -309,7 +309,7 @@
         <div class="btn-group">
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn-primary btn"
             aria-label="Next result"
             on:click={() => handleChevronClick(true)}
           >
@@ -331,7 +331,7 @@
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn-primary btn"
             aria-label="Previous result"
             on:click={() => handleChevronClick(false)}
           >
@@ -366,14 +366,14 @@
       <div class={getTabClass(key)}>
         <button
           type="button"
-          class="btn btn-ghost btn-xs normal-case"
+          class="btn-ghost btn-xs btn normal-case"
           on:click={() => setActiveLog(key)}
         >
           <!-- get the filename -->
           {key.split(/[\\/]/).pop()}
         </button>
 
-        <button class="btn btn-ghost btn-xs" on:click={() => removeLog(key)}>
+        <button class="btn-ghost btn-xs btn" on:click={() => removeLog(key)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -392,7 +392,7 @@
   <!-- TODO: would it be better to use array index instead of css for line numbers? -->
   {#each Object.entries(logs) as [key, lines] (key)}
     <div
-      class={"rounded-b-box rounded-tr-box bg-base-300 line-container hidden h-5/6 overflow-auto p-2 pb-8"}
+      class={"line-container rounded-b-box rounded-tr-box hidden h-5/6 overflow-auto bg-base-300 p-2 pb-8"}
       id={key}
     >
       <pre class={$settings.textWrap ? "whitespace-normal" : "whitespace-nowrap"}>
@@ -401,7 +401,7 @@
             <span class="flex">
           <span class="line" />
         {#if $settings.highlightLevels}
-                <p>{@html parseLine(line.toUpperCase())}</p>
+                <p>{@html parseLine(line)}</p>
               {:else}
                 <p>{line}</p>
               {/if}
@@ -410,7 +410,7 @@
         {:else}
           {#each lines as line}
             {#if $settings.highlightLevels}
-              <p>{@html parseLine(line.toUpperCase())}</p>
+              <p>{@html parseLine(line)}</p>
             {:else}
               <p>{line}</p>
             {/if}
