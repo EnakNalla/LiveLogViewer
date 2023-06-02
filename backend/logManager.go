@@ -219,5 +219,10 @@ func (a *App) pollFile(path string) {
 
 func (a *App) RemoveLog(path string) {
 	delete(a.logs, path)
+
+	if a.watcher == nil {
+		return
+	}
+
 	_ = a.watcher.Remove(path)
 }
